@@ -89,9 +89,15 @@ function prepararCanvas() {
         
         console.log(fila + ' - ' + columna);
 
-        cv.width = cv.width; // Limpiar canvas
+        limpiarCanvas();
         pintarCeldaSeleccionada(cv, fila, columna);
+        anyadirNumDisponibles();
     };
+}
+
+function limpiarCanvas() {
+    let cv = document.querySelector('#cvRejilla');
+    cv.width = cv.width;
 }
 
 function pintarCeldaSeleccionada(cv, fila, columna) {
@@ -201,10 +207,46 @@ function empezar() {
     for (let i = 0; i < radios.length; i++) {
         radios[i].disabled = true;
     }
+
+    let html = '<p>Tiempo: 00:00:00</p>';
+    html += '<button class="btnFunc" onclick="comprobar();">Comprobar</button>';
+    html += '<button class="btnFunc" onclick="finalizar();">Finalizar</button>';
+    aside.innerHTML = html;
 }
 
+function anyadirNumDisponibles() {
+    eliminarNumDisponibles();
 
+    let aside  = document.querySelector('#juego aside'),
+        html   = '',
+        div = document.createElement('div');
 
+    div.setAttribute('id','numD');
+    html += '<h3>Números disponibles</h3><div>';
+
+    for (let num=0; num<regiones; num++) {
+        html += '<button class="btnNum" value="'+(num+1)+'" onclick="selectNumero(this);">'+(num+1)+'</button>';
+    }
+    html += '</div>';
+    div.innerHTML = html;
+    aside.appendChild(div);
+}
+
+function eliminarNumDisponibles() {
+    let elemento  = document.querySelector('#juego aside #numD');
+    if (elemento != null) {
+        elemento.remove();
+    }
+}
+
+function selectNumero(btn) {
+    console.log(btn.value);
+
+    eliminarNumDisponibles();
+    limpiarCanvas();
+
+    pintarBorde();
+}
 
 
 
@@ -274,25 +316,6 @@ function comprobarLogin() {
     }
 }
 
-
-//Función que deshabilita cualquier elemento que se le pase
-function deshabilitarElemento(elemento, value)
-{
-    elemento.disabled = value
-}
-
-//Función que deshabilita enlaces
-function deshabilitarEnlaces(elemento, value)
-{
-    if(value)
-    {
-        elemento.className = "disabledLink";
-    }
-    else
-    {
-        elemento.className = "";
-    }
-}
 
 function menu() {
     comprobarLogin();
@@ -366,11 +389,6 @@ function pedirCategorias(buscar) {
         } else
             console.log('Error en la petición fetch');
     });
-}
-
-// Elimina la ficha seleccionada
-function eliminarFicha(boton) {
-    boton.parentNode.remove();
 }
 
 // Comprueba si hay fotos para enviar en el nuevo articulo y las guarda en un array
@@ -453,10 +471,7 @@ function enviarFoto(id, foto) {
 
 
 
-    let p = document.createElement('p');
-    p.setAttribute('id','descp');
-    p.innerHTML = descripcion;
-    mainArt.querySelector('section article').appendChild(p);
+    
 
 function getIdArticulo() {
     return new URLSearchParams(window.location.search).get('id');
