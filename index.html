@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="utf-8">
+        <meta name ="viewport" content = "width = device-width, initial-scale = 1.0">
+        <link rel="stylesheet" href="css/estilos.css">
+        <meta name="description" content="P&aacute;gina con el Sudoku de la P3 (PCW)">
+        <script src="js/codigo.js"></script>
+        <title>Sudoku</title>
+    </head>
+    <body>
+        <header>
+            <div>
+                <a href="index.html" title="Sudoku">
+                    <h2><img src="imgs/logo.png" alt="Sudoku"></h2>
+                </a>
+                <p>El objetivo es rellenar una cuadrícula donde no se debe repetir ningún número en una misma fila, columna o subcuadrícula.</p>
+            </div>
+        </header>
+        
+        <main id="principal">
+            <section>
+                <h1>Juego</h1>
+                <div id="tamanyo">
+                    <p>Tamaño:</p>
+                    <input type="radio" id="4" name="tamanyo" value="4" onclick="cambiarCanvas(this);" checked>
+                    <label for="4">4x4</label>
+                    <input type="radio" id="9" name="tamanyo" value="9" onclick="cambiarCanvas(this);">
+                    <label for="9">9x9</label>
+                </div>
+                <div id="juego">
+                    <canvas id="cvRejilla"></canvas>
+                    <aside>
+                        <button onclick="empezar();">Empezar</button>
+                    </aside>
+                </div>
+            </section>
+        </main>
+        <footer>
+            <p>&copy;2020 <a href="acerca.html" title="Acerca de MD Design">MD Design</a></p>
+        </footer>
+        <script>
+            prepararCanvas();
+        </script>
+    </body>
+</html>

@@ -1,0 +1,307 @@
+/* Hoja de estilos */
+@import url('https://fonts.googleapis.com/css?family=Pacifico&display=swap');
+@import url('https://fonts.googleapis.com/css?family=Fira+Sans&display=swap');
+
+* {
+	text-decoration: none;
+	margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+}
+
+body
+{
+    background-color: #ddd;
+    color: #333;
+    font-family: 'Fira Sans', sans-serif;
+}
+
+main {
+    min-height: 80%;
+ }
+
+header {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 100px;
+    position: relative;
+    left: 0;
+    top: 0;
+    background-color: #6ad;
+    color: #fff;
+    box-shadow: 0 2px 6px #333;
+    z-index: 1;
+}
+
+header div {
+    margin-left: 4%;
+    color: #222a26;
+    font-family: 'Pacifico', cursive;
+    font-size: 1.1em;
+}
+
+header div img {
+    height: 45px;
+}
+
+footer {
+	display: flex;
+    align-items: center;
+	color:#fff;
+	background-color: #0d455a;
+    border-top: 5px solid #026f98;
+    position: relative;
+    bottom: 0;
+    width: 100%;
+    height: 70px;
+}
+
+footer p {
+    margin-left: 20px;
+    font-size: 1.3em;
+}
+
+footer a {
+	color:#fff;
+}
+
+footer a:hover {
+	color: #ffa600;
+	font-weight: bold;
+}
+
+.volver {
+    padding-top: 5px;
+    background: #026f98;
+    position: absolute;
+    bottom: 20px;
+    right: 10px;
+    height: 30px;
+    width: 80px;
+    border-radius: 3px;
+    text-align: center;
+    cursor: pointer;
+    opacity: .6;
+    transition: .3s;
+}
+
+.volver:hover {
+	opacity: 1;
+}
+
+
+/* Cuerpo comun */
+#principal, #acerca_principal
+{  
+    background-color: #fff;
+    padding: 20px 10% 20px 10%;
+}
+
+#principal h1, #acerca_principal h1 {
+	border-bottom: 5px solid #6ad;
+}
+
+
+
+/* Index */
+#principal {
+	width: 100%;
+    max-width: 80%;
+    margin: 0 auto;
+}
+
+#tamanyo {
+    display: flex;
+    margin: 15px 0;
+}
+
+#tamanyo input {
+    margin-left: 20px;
+    margin-right: 5px;
+}
+
+#juego {
+    display: flex;
+}
+
+#juego aside {
+    margin-left: 30px;
+}
+
+#juego aside>button {
+    padding: 10px;
+    font-weight: bold;
+}
+
+
+/* Acerca */
+#acerca_principal h2 {
+    margin: 25px 0 10px 0;
+}
+
+#acerca_principal>section,
+#acerca_principal article
+{
+    width: 100%;
+}
+
+#acerca_principal article {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#acerca_principal>section>p,
+#acerca_principal>section>div>article>div>p
+{
+    margin-top: 10px;
+}
+
+#acerca_principal>section>div>article>img
+{
+    height: 192px;
+    width: 192px;
+}
+
+#acerca_principal>section>div>article>div>p,
+#acerca_principal>section>p
+{
+    text-align: justify;
+}
+
+
+
+/* Media queries */
+
+@media all and (min-width: 480px)
+{
+    #acerca_principal article {
+        margin-top: 20px;
+    }
+}
+
+@media all and (min-width: 640px)
+{
+    #principal, #acerca_principal
+    {
+        margin: 0 10%; 
+        /*padding: 120px 10% 20px 10%;*/
+    }
+
+    #acerca_principal>section>div
+    {
+        display: flex;
+        width: 100%;
+    }
+    
+    #acerca_principal>section>div>article>img
+    {
+        height: 128px;
+        width: 128px;
+    }
+
+}
+
+@media all and (min-width: 980px)
+{    
+    #principal, #acerca_principal
+    {
+        margin: 0 15%; 
+        /*padding: 120px 10% 20px 10%;*/
+    }
+
+    #acerca_principal>section>div>article>img
+    { 
+        height: 192px;
+        width: 192px;
+    }
+}
+
+@media all and (min-width: 1280px)
+{
+    #acerca_principal>section>div>article>img
+    {
+        height: 256px;
+        width: 256px;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+/* Estilos del modal */
+#capa-fondo {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background-color: rgba(255,255,255,.8);
+}
+    #capa-fondo > article {
+        background-color: #F2FAFF;
+        text-align: center;
+        width: 20em;
+        position: absolute;
+        top: 15em;
+        left: 50%;
+        transform: translateX(-50%);
+        border-radius: 8px;
+        box-shadow: 5px 5px #27323260;
+    }
+        #capa-fondo > article > h2 {
+            background-color: #6ad;
+            margin: 0 0 1em 0;
+            padding: .5em;
+            border-radius: 8px 8px 0 0;
+        }
+
+        #capa-fondo > article > p {
+            padding: 0 14px 0 14px;
+        }
+        
+        #capa-fondo > article > footer {
+            border-radius: 0 0 8px 8px;
+        }
+
+        #capa-fondo > article > footer > button {
+            margin: .5em;
+            font-size: 1em;
+            font-weight: bold;
+            background-color: #6ad;
+            padding: .5em 2em;
+            cursor: pointer;
+            border: none;
+            border-radius: 3px;
+            transition: .3s;
+            color: #fff;
+        }
+        #capa-fondo > article > footer > button:hover {
+            background-color: #08b;
+        }
+
+    .modal {
+        position: relative;
+        margin: 1em 0 0 0;
+    }
+
+    #capa-fondo textarea {
+        max-width: 85%;
+        min-width: 85%;
+    }
+
+    #modArt p {
+        font-weight: bold;
+    }
