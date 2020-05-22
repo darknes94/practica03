@@ -72,6 +72,7 @@ function cerrarMensajeModal(tipo, redirigir) {
 // =================================================================================
 var anchCelda = 50;
 var regiones = 4;
+var subcuadros = 2;
 
 function prepararCanvas() {
     let cv = document.querySelector('#cvRejilla');
@@ -80,19 +81,6 @@ function prepararCanvas() {
     cv.height = anchCelda*regiones;
 
     pintarBorde();
-
-    cv.onclick = function(evt) {
-        let fila, columna;
-
-        fila = Math.floor(evt.offsetX / (cv.width/regiones));
-        columna = Math.floor(evt.offsetY / (cv.height/regiones));
-        
-        console.log(fila + ' - ' + columna);
-
-        limpiarCanvas();
-        pintarCeldaSeleccionada(cv, fila, columna);
-        anyadirNumDisponibles();
-    };
 }
 
 function limpiarCanvas() {
@@ -100,7 +88,7 @@ function limpiarCanvas() {
     cv.width = cv.width;
 }
 
-function pintarCeldaSeleccionada(cv, fila, columna) {
+function pintarCeldaSeleccionada(cv, fila, columna, filaSub, colSub) {
     let ctx = cv.getContext('2d');
     
     ctx.beginPath();
@@ -111,6 +99,10 @@ function pintarCeldaSeleccionada(cv, fila, columna) {
         ctx.fillRect(f*anchCelda, columna*anchCelda, anchCelda, anchCelda);
         ctx.fillRect(fila*anchCelda, f*anchCelda, anchCelda, anchCelda);
     }
+
+    // Seleccion de la subcuadricula
+    ctx.fillRect(filaSub*(anchCelda*subcuadros), colSub*(anchCelda*subcuadros),
+        (anchCelda*subcuadros), (anchCelda*subcuadros));
     
     // Celda seleccionada
     ctx.beginPath();
@@ -197,12 +189,19 @@ function cambiarCanvas(rbt) {
     cv.width  = anchCelda*regiones;
     cv.height = anchCelda*regiones;
 
+    if (regiones == 4) {
+        subcuadros = 2;
+    } else {
+        subcuadros = 3;
+    }
+
     pintarBorde();
 }
 
 function empezar() {
-    let aside    = document.querySelector('#juego aside'),
-        radios  = document.querySelectorAll('#tamanyo input');
+    let aside   = document.querySelector('#juego aside'),
+        radios  = document.querySelectorAll('#tamanyo input'),
+        cv      = document.querySelector('#cvRejilla');
 
     for (let i = 0; i < radios.length; i++) {
         radios[i].disabled = true;
@@ -212,6 +211,23 @@ function empezar() {
     html += '<button class="btnFunc" onclick="comprobar();">Comprobar</button>';
     html += '<button class="btnFunc" onclick="finalizar();">Finalizar</button>';
     aside.innerHTML = html;
+
+    // Activamos la seleccion de celdas
+    cv.onclick = function(evt) {
+        let fila, columna, filaSub, colSub;
+        
+        fila = Math.floor(evt.offsetX / (cv.width/regiones));
+        columna = Math.floor(evt.offsetY / (cv.height/regiones));
+        filaSub = Math.floor(evt.offsetX / (cv.width/subcuadros));
+        colSub = Math.floor(evt.offsetY / (cv.height/subcuadros));
+
+        //console.log(fila + ' - ' + columna);
+        console.log(filaSub + ' - ' + colSub);
+
+        limpiarCanvas();
+        pintarCeldaSeleccionada(cv, fila, columna, filaSub, colSub);
+        anyadirNumDisponibles();
+    };
 }
 
 function anyadirNumDisponibles() {
