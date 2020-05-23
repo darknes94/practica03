@@ -73,6 +73,8 @@ function cerrarMensajeModal(tipo, redirigir) {
 var anchCelda = 50;
 var regiones = 4;
 var subcuadros = 2;
+var juego;
+var clic = false;
 
 function prepararCanvas() {
     let cv = document.querySelector('#cvRejilla');
@@ -105,13 +107,10 @@ function pintarCeldaSeleccionada(cv, fila, columna, filaSub, colSub) {
         (anchCelda*subcuadros), (anchCelda*subcuadros));
     
     // Celda seleccionada
-    ctx.beginPath();
-    ctx.fillStyle = '#06B';
-    ctx.fillRect(fila*anchCelda, columna*anchCelda, anchCelda, anchCelda);
+    pintarCeldaHover(cv, fila, columna);
 
-    //TODO
-    // Celdas grises
-    // Numeros
+    // Celdas grises con numeros
+    pintarCeldasGrises();
 
     // Bordes
     pintarBorde();
@@ -212,25 +211,71 @@ function empezar() {
     html += '<button class="btnFunc" onclick="finalizar();">Finalizar</button>';
     aside.innerHTML = html;
 
+    generarSudoku();
+
+    cv.onmousemove = function(evt) {
+        let fila = Math.floor(evt.offsetX / (cv.width/regiones)),
+            columna = Math.floor(evt.offsetY / (cv.height/regiones));
+
+        if (!clic) {
+            if (comprobarCelda(fila, columna)) {
+                limpiarCanvas();
+                pintarCeldaHover(cv, fila, columna);
+                pintarCeldasGrises();
+                pintarBorde();
+                cv.style.cursor = 'pointer';
+            } else {
+                limpiarCanvas();
+                pintarCeldasGrises();
+                pintarBorde();
+                cv.style.cursor = 'auto';
+            }
+        } else {
+            if (comprobarCelda(fila, columna)) {
+                cv.style.cursor = 'pointer';
+            } else {
+                cv.style.cursor = 'auto';
+            }
+        }
+    }
+
     // Activamos la seleccion de celdas
     cv.onclick = function(evt) {
-        let fila, columna, filaSub, colSub;
+        let fila    = Math.floor(evt.offsetX / (cv.width/regiones)),
+            columna = Math.floor(evt.offsetY / (cv.height/regiones)),
+            filaSub, colSub;
         
-        fila = Math.floor(evt.offsetX / (cv.width/regiones));
-        columna = Math.floor(evt.offsetY / (cv.height/regiones));
-        filaSub = Math.floor(evt.offsetX / (cv.width/subcuadros));
-        colSub = Math.floor(evt.offsetY / (cv.height/subcuadros));
-
-        //console.log(fila + ' - ' + columna);
-        console.log(filaSub + ' - ' + colSub);
-
-        limpiarCanvas();
-        pintarCeldaSeleccionada(cv, fila, columna, filaSub, colSub);
-        anyadirNumDisponibles();
+        if (comprobarCelda(fila, columna)) {
+            clic = true;
+            filaSub = Math.floor(evt.offsetX / (cv.width/subcuadros));
+            colSub = Math.floor(evt.offsetY / (cv.height/subcuadros));
+    
+            console.log(fila + ' - ' + columna);
+            //console.log(filaSub + ' - ' + colSub);
+    
+            limpiarCanvas();
+            pintarCeldaSeleccionada(cv, fila, columna, filaSub, colSub);
+            anyadirNumDisponibles(fila, columna);
+        }
     };
 }
 
-function anyadirNumDisponibles() {
+function comprobarCelda(fila, columna) {
+    let usu = JSON.parse(sessionStorage['usuario']);
+
+    if (usu.SUDOKU[columna][fila] == '0')
+        return true;
+    return false;
+}
+
+function pintarCeldaHover(cv, fila, columna) {
+    let ctx = cv.getContext('2d');
+    ctx.beginPath();
+    ctx.fillStyle = '#06B';
+    ctx.fillRect(fila*anchCelda, columna*anchCelda, anchCelda, anchCelda);
+}
+
+function anyadirNumDisponibles(fila, columna) {
     eliminarNumDisponibles();
 
     let aside  = document.querySelector('#juego aside'),
@@ -241,7 +286,7 @@ function anyadirNumDisponibles() {
     html += '<h3>Números disponibles</h3><div>';
 
     for (let num=0; num<regiones; num++) {
-        html += '<button class="btnNum" value="'+(num+1)+'" onclick="selectNumero(this);">'+(num+1)+'</button>';
+        html += '<button class="btnNum" value="'+(num+1)+'" onclick="selectNumero(this,'+fila+', '+columna+');">'+(num+1)+'</button>';
     }
     html += '</div>';
     div.innerHTML = html;
@@ -255,19 +300,70 @@ function eliminarNumDisponibles() {
     }
 }
 
-function selectNumero(btn) {
-    console.log(btn.value);
-
+function selectNumero(btn, fila, columna) {
+    juego[columna][fila] = parseInt(btn.value);
     eliminarNumDisponibles();
     limpiarCanvas();
-
+    pintarCeldasGrises();
     pintarBorde();
+
+    clic = false;
 }
 
 
+function generarSudoku() {
+    let url = 'api/sudoku/generar/'+regiones;
 
+        fetch(url, {method:'POST'}).then(function(respuesta){
+            if(respuesta.ok) {
+                respuesta.json().then(function(datos) {
+                    sessionStorage['usuario'] = JSON.stringify(datos);
 
+                    juego = JSON.parse(sessionStorage['usuario']).SUDOKU.slice();
 
+                    pintarCeldasGrises();
+                    pintarBorde();
+                    //console.log(juego);
+                });
+            } else 
+                console.log('Error al intentar generar el sudoku.');
+        });
+}
+
+function pintarCeldasGrises() {
+    let cv  = document.querySelector('#cvRejilla'),
+        ctx = cv.getContext('2d'),
+        usu = JSON.parse(sessionStorage['usuario']);
+    
+    //console.log(usu.SUDOKU);
+    
+    let rAnc  = cAnc = 0,
+        mitad = anchCelda/2;
+
+        console.log(juego);
+    // Celdas grises con numeros
+    for (let row=0; row<usu.SUDOKU.length; row++) {
+        for (let col=0; col<usu.SUDOKU.length; col++) {
+            rAnc = row*anchCelda;
+            cAnc = col*anchCelda;
+
+            if (usu.SUDOKU[col][row] != '0') {
+                ctx.beginPath();
+                ctx.fillStyle = '#DBDBDB';
+                ctx.fillRect(rAnc, cAnc, anchCelda, anchCelda);
+            }
+
+            if (juego[col][row] != '0') {
+                ctx.beginPath();
+                ctx.fillStyle = '#000';
+                ctx.font = 'bold 25px sans-serif,arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(juego[col][row],rAnc+mitad, cAnc+mitad);
+            }
+        }
+    }
+}
 
 
 
@@ -359,24 +455,6 @@ function menu() {
     }
 
     document.querySelector('body>header>nav>ul').innerHTML = html;
-}
-
-// Logout, los datos de sessionStorage se borran y en la BD borramos el token de dicho usuario
-function logout() {
-    let url = 'api/usuarios/logout',
-        usu = JSON.parse(sessionStorage['usuario']);
-
-        fetch(url, {method:'POST',
-        headers:{'Authorization':usu.login + ':' + usu.token}}).then(function(respuesta){
-            if(respuesta.ok) {
-                respuesta.json().then(function(datos) {
-                    console.log(datos);
-                    delete sessionStorage['usuario'];
-                    window.location.replace("index.html");
-                });
-            } else 
-                console.log('Error al intentar hacer logout.');
-        });
 }
 
 // Rellena el select de categorias que hay en buscar y el datalist de nuevo articulo
