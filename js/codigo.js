@@ -77,12 +77,24 @@ var juego;
 var clic = false;
 
 function prepararCanvas() {
-    let cv = document.querySelector('#cvRejilla');
+    let cv     = document.querySelector('#cvRejilla'),
+        aside  = document.querySelector('#juego aside'),
+        html   = '<button class="btnFunc" onclick="empezar();">Empezar</button>',
+        radios = document.querySelectorAll('#tamanyo input');
 
+    aside.innerHTML = html;
     cv.width  = anchCelda*regiones;
     cv.height = anchCelda*regiones;
-
     pintarBorde();
+
+    cv.onmousemove = '';
+    cv.onclick = '';
+    cv.style.cursor = 'auto';
+
+    for (let i = 0; i < radios.length; i++) {
+        radios[i].disabled = false;
+    }
+    radios[0].checked = true;
 }
 
 function limpiarCanvas() {
@@ -250,9 +262,6 @@ function empezar() {
             filaSub = Math.floor(evt.offsetX / (cv.width/subcuadros));
             colSub = Math.floor(evt.offsetY / (cv.height/subcuadros));
     
-            console.log(fila + ' - ' + columna);
-            //console.log(filaSub + ' - ' + colSub);
-    
             limpiarCanvas();
             pintarCeldaSeleccionada(cv, fila, columna, filaSub, colSub);
             anyadirNumDisponibles(fila, columna);
@@ -317,13 +326,11 @@ function generarSudoku() {
         fetch(url, {method:'POST'}).then(function(respuesta){
             if(respuesta.ok) {
                 respuesta.json().then(function(datos) {
+                    console.log(datos);
                     sessionStorage['usuario'] = JSON.stringify(datos);
-
                     juego = JSON.parse(sessionStorage['usuario']).SUDOKU.slice();
-
                     pintarCeldasGrises();
                     pintarBorde();
-                    //console.log(juego);
                 });
             } else 
                 console.log('Error al intentar generar el sudoku.');
@@ -333,14 +340,10 @@ function generarSudoku() {
 function pintarCeldasGrises() {
     let cv  = document.querySelector('#cvRejilla'),
         ctx = cv.getContext('2d'),
-        usu = JSON.parse(sessionStorage['usuario']);
-    
-    //console.log(usu.SUDOKU);
-    
-    let rAnc  = cAnc = 0,
+        usu = JSON.parse(sessionStorage['usuario']),
+        rAnc  = cAnc = 0,
         mitad = anchCelda/2;
 
-        console.log(juego);
     // Celdas grises con numeros
     for (let row=0; row<usu.SUDOKU.length; row++) {
         for (let col=0; col<usu.SUDOKU.length; col++) {
@@ -365,309 +368,59 @@ function pintarCeldasGrises() {
     }
 }
 
+function comprobar() {
+
+    let usu = JSON.parse(sessionStorage['usuario']),
+        url = 'api/sudoku/'+usu.ID+'/comprobar',
+        fd  = new FormData();
+
+    /*let cosa = '[';
+
+    for (let i=0; i<juego.length; i++)
+        cosa += '['+juego[i]+'],';
+    cosa = cosa.substring(0,cosa.length-1);
+    cosa += ']';
+        console.log(cosa);*/
 
 
+    fd.append('juego', juego);
+    console.log(juego);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-//-------------------------------------------------------------------
-//              Funciones para la botonera de paginación
-
-/*
-function hacerLogin(frm) {
-    let url = 'api/usuarios/login',
-        fd  = new FormData(frm);
-
-    fetch(url, {method:'POST', 
-        body:fd}).then(function(respuesta){
-            if(respuesta.ok) {
-                respuesta.json().then(function(datos){
-                    sessionStorage['usuario'] = JSON.stringify(datos);
-
-                    // Texto del mensaje
-                    mensajeModal('LOGIN',
-                        'El usuario '+ datos.login +' se ha logueado correctamente.',
-                        'cerrarMensajeModal(0,true);',
-                        'Aceptar');
-                });
-            } else if(respuesta.status == 401) {
-                
-                    // Texto del mensaje
-                    mensajeModal('LOGIN INCORRECTO',
-                        'Usuario o contraseña incorrectos.',
-                        'cerrarMensajeModal(0,false);',
-                        'Cerrar');
-            } else 
-                console.log('Error en la petición fetch de login.');
-        });
-    return false; // Para no recargar la página
-}
-
-function comprobarLogin() {
-    // Si esta logueado, no puede entrar a login ni a registro
-    if ((sessionStorage['usuario']) &&
-        ((document.body.getAttribute('data-pagina') == 'login') ||
-        (document.body.getAttribute('data-pagina') == 'registro'))) {
-            window.location.replace("index.html");
-            
-    } // Si no esta logueado, no puede entrar a nuevo
-    else if ((!sessionStorage['usuario']) && 
-        (document.body.getAttribute('data-pagina') == 'nuevo')) {
-            window.location.replace("index.html");
-    }
-}
-
-
-function menu() {
-    comprobarLogin();
-    let html = '';
-
-    if (document.body.getAttribute('data-pagina') != 'inicio')
-        html += '<li><a href="index.html" title="Inicio"><i class="flaticon-home"></i> <span>Inicio</span></a></li>';
-    
-    if (document.body.getAttribute('data-pagina') != 'buscar')
-        html += '<li><a href="buscar.html" title="Buscar"><i class="flaticon-loupe"></i> <span>Buscar</span></a></li>';
-
-    if(sessionStorage['usuario']) {
-        if (document.body.getAttribute('data-pagina') != 'nuevo')
-            html += '<li><a href="nuevo.html" title="Nuevo"><i class="flaticon-plus"></i> <span>Nuevo</span></a></li>';
-        
-        let usu = JSON.parse(sessionStorage['usuario']);
-        html += `<li onclick="logout();" class="logout"><i class="flaticon-logout"></i> <span>Logout (${usu.nombre})</span></li>`;
-    
-    } else {
-        if (document.body.getAttribute('data-pagina') != 'login')
-        html += '<li><a href="login.html" title="Login"><i class="flaticon-enter"></i> <span>Login</span></a></li>';
-
-        if (document.body.getAttribute('data-pagina') != 'registro')
-            html += '<li><a href="registro.html" title="Registro"><i class="flaticon-id-card"></i> <span>Registro</span></a></li>';
-    }
-
-    document.querySelector('body>header>nav>ul').innerHTML = html;
-}
-
-// Rellena el select de categorias que hay en buscar y el datalist de nuevo articulo
-function pedirCategorias(buscar) {
-    let url="api/categorias";
-
-    fetch(url).then(function(respuesta) {
-        if(respuesta.ok) { 
-            respuesta.json().then(function(datos) {
-                if (datos.RESULTADO == 'OK') {
-                    let html = '';
-
-                    if (buscar)         // opcion para el select
-                        html += '<option selected value="-">-</option>';
-
-                    datos.FILAS.forEach(function(e) {
-                        if (!buscar)    // opcion para el datalist
-                            html += `<option id="${e.id}" value="${e.nombre}">`;
-                        else            // opcion para el select
-                            html += `<option value="${e.id}">${e.nombre}</option>`;
-                    });
-                    document.querySelector('#categorias').innerHTML = html;
-                } else
-                    console.log('ERROR: ' + datos.DESCRIPCION);
-            });
-        } else
-            console.log('Error en la petición fetch');
-    });
-}
-
-// Comprueba si hay fotos para enviar en el nuevo articulo y las guarda en un array
-function comprobarFotos() {
-    let fichas = document.querySelector('#add-img').querySelectorAll('div');
-    var fotos = [];
-
-    if (fichas.length > 0) {
-        for (var i = 0; i < fichas.length; i++) {
-            let foto = fichas[i].querySelector('input').files[0];
-            if (foto != null)
-                fotos.push(foto);
-        }
-    }
-    return fotos;
-}
-
-// Crea el nuevo articulo 
-function crearNuevoArticulo(frm) {
-
-    let url = 'api/articulos/',
-    fd  = new FormData(frm),
-    usu = JSON.parse(sessionStorage['usuario']);
-
-    fetch(url, {method:'POST', 
+    fetch(url, {method:'POST',
         body:fd,
-        headers:{'Authorization':usu.login + ':' + usu.token}}).then(function(respuesta){
+        headers:{'Authorization':usu.TOKEN}}).then(function(respuesta){
 
             if(respuesta.ok) {
                 respuesta.json().then(function(datos){
-                
-                    // Comprobamos si hay alguna foto seleccionada para subirla al server
-                    let fotos = comprobarFotos();
-                    if (fotos.length > 0) {
-                        let foto = 0;
-                        let continuar = true;
-                        while (foto < fotos.length && continuar) {
-
-                            enviarFoto(datos.ID, fotos[foto])
-                                .then(() => {}, // Si todo va bien, no hacemos nada
-                                function(err){
-                                    continuar = false;
-                                    console.log(err.status+': '+err.statusText);
-                                });
-                            foto++;
-                        }
-                    }
-                    mensajeModal('NUEVO ARTICULO',
+                    console.log(datos);
+                    /*mensajeModal('NUEVO ARTICULO',
                         'Se ha guardado correctamente el artículo',
                         'cerrarMensajeModal(0,true);',
-                        'Aceptar');
+                        'Aceptar');*/
                 });
             } else
-                console.log('Error en la petición fetch de nuevo artículo.');
+                console.log('Error en la petición fetch de comprobar SUDOKU.');
         });
-    return false; // Para no recargar la página
 }
 
-// Envia 1 foto al servidor y le pasa el resultado a crearNuevoArticulo(frm)
-function enviarFoto(id, foto) {
-    return new Promise(function(todoOK, hayError) {
-
-        let url = 'api/articulos/'+id+'/foto',
-            fd  = new FormData(),
-            usu = JSON.parse(sessionStorage['usuario']);
-
-        fd.append('fichero', foto);
-
-        fetch(url, {method:'POST', 
-            body:fd,
-            headers:{'Authorization':usu.login + ':' + usu.token}})
-            .then(function(r) {
-                if(r.ok) {
-                    todoOK(r);
-                } else
-                    hayError(r);
-            });
-    });
-}
-
-
-
-    
-
-function getIdArticulo() {
-    return new URLSearchParams(window.location.search).get('id');
-}
-function getVendedorArticulo() {
-    return new URLSearchParams(window.location.search).get('login');
-}
-function getTextoArticulo() {
-    return new URLSearchParams(window.location.search).get('texto');
-}
-
-function pedirInfoArticulo() {
-
-    let url = 'api/articulos/'+getIdArticulo(),
-        init = null;
-
-    if (sessionStorage['usuario']) {
-        usu = JSON.parse(sessionStorage['usuario']);
-        // method get es por defecto y body no hace falta
-        init = { headers:{'Authorization':usu.login + ':' + usu.token} };
-    }
-
-    // la cabecera con el login hace que aparezca el campo 'estoy_siguiendo'
-    fetch(url, init).then(function(respuesta) {
-        if(respuesta.ok) {
-            respuesta.json().then(function(datos) {
-                let articulo = datos.FILAS[0];
-                let propietario = false;
-
-                if ((init != null) && (usu.login == articulo.vendedor))
-                    propietario = true;
-
-                anyadirInfoArticulo(articulo.nombre, articulo.descripcion, articulo.precio,
-                    articulo.veces_visto, articulo.vendedor, articulo.imagen, articulo.nfotos,
-                    articulo.nsiguiendo, articulo.npreguntas, articulo.estoy_siguiendo, propietario,
-                    articulo.id, articulo.categoria, articulo.fecha, articulo.foto_vendedor);
-
-            });
-        } else
-            console.log('Error en la petición fetch');
-    });
-}
-
-// Para eliminar un articulo, se abrira primero un modal para pedir confirmacion al usuario
-function eliminarArt() {
-    modalConfirmacion('ELIMINAR ARTICULO',
-        '<p>¿Está seguro que desea eliminar el artículo?</p>',
-        '<button onclick="borrarArtServer();">Aceptar</button>',
-        'borraCodigoModal();');
-}
-
-function borrarArtServer() {
-    let url = 'api/articulos/'+getIdArticulo(),
-        usu = JSON.parse(sessionStorage['usuario']);
+function finalizar() {
+    let usu = JSON.parse(sessionStorage['usuario']),
+        url = 'api/sudoku/'+usu.ID;
 
     fetch(url, {method:'DELETE', 
-        headers:{'Authorization':usu.login + ':' + usu.token}}).then(function(respuesta){
+        headers:{'Authorization':usu.TOKEN}}).then(function(respuesta){
 
             if(respuesta.ok) {
                 respuesta.json().then(function(datos){
-                    window.location.replace("index.html");
+
+                    delete(sessionStorage['usuario']);
+                    regiones = 4;
+                    subcuadros = 2;
+                    juego = 4;
+                    clic = false;
+                    prepararCanvas();
                 });
-            }
-        });
-}
-
-function modificarArt() {
-    let precio = document.querySelector('#precio').innerHTML.replace(' €','');
-    let descp = document.querySelector('#descp').innerHTML.replace(/<br>/gi,'\r');
-    let html = '<form id="modArt" onsubmit="modificarArtServer(this); return false;">';
-        html += '<p>Nuevo precio:</p>';
-        html += `<input type="number" id="prec" name="precio" min="0" max="9999" value="${precio}" step="0.01" required> €`;
-        html += '<p>Nueva descripción:</p>';
-        html += `<textarea maxlength="300" name="descripcion" required>${descp}</textarea>`;
-        html += '</form>';
-
-    modalConfirmacion('MODIFICAR ARTICULO',
-        html,
-        '<button type="submit" form="modArt">Aceptar</button>',
-        'borraCodigoModal();');
-}
-
-function modificarArtServer(frm) {
-    console.log(frm.descripcion.value);
-    let url = 'api/articulos/'+getIdArticulo(),
-    fd  = new FormData(frm),
-    usu = JSON.parse(sessionStorage['usuario']);
-
-    fetch(url, {method:'POST', 
-        body:fd,
-        headers:{'Authorization':usu.login + ':' + usu.token}}).then(function(respuesta){
-
-            if(respuesta.ok) {
-                document.querySelector('#precio').innerHTML = frm.precio.value+' €';
-                document.querySelector('#descp').innerHTML = frm.descripcion.value.replace(/\n/gi,'<br>');;
-
-                borraCodigoModal();
-                mensajeModal('MODIFICAR ARTICULO',
-                    'Se ha modificado correctamente el artículo',
-                    'borraCodigoModal();',
-                    'Aceptar');
             } else
-                console.log('Error en la petición fetch de modificar artículo.');
+                console.log('Error en la petición fetch de borrar SUDOKU.');
         });
-}*/
+}
