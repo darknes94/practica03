@@ -133,10 +133,24 @@ header div img {
     margin-left: 30px;
 }
 
+#juego aside > p {
+    margin-bottom: 10px;
+    background-color: #a5d6fb;
+    padding: 10px;
+    text-align: center;
+    font-size: 1.3em;
+    font-weight: bold;
+    border-radius: 3px;
+}
+
 #juego aside>button {
-    margin-right: 20px;
     font-weight: bold;
     cursor: pointer;
+    width: 100px;
+}
+
+#juego aside p + button{
+    margin-right: 30px;
 }
 
 #numD h3 {

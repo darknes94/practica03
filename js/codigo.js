@@ -91,6 +91,7 @@ function pintarCeldaSeleccionada(cv, fila, columna, filaSub, colSub) {
     // Celda seleccionada
     pintarCeldaHover(cv, fila, columna);
 
+    //pintarErrores();
     // Celdas grises con numeros
     pintarCeldasGrises();
 
@@ -202,6 +203,21 @@ function pintarCeldasGrises() {
     }
 }
 
+function pintarErrores() {
+    if (listaFallos != null) {
+        let cv  = document.querySelector('#cvRejilla'),
+            ctx = cv.getContext('2d');
+
+        for (let row=0; row<listaFallos.length; row++) {
+            ctx.beginPath();
+            ctx.fillStyle = '#E23838';
+            ctx.fillRect(listaFallos[row].columna*anchCelda, listaFallos[row].fila*anchCelda, 
+                anchCelda, anchCelda);
+        }
+    }
+    listaFallos = null;
+}
+
 function cambiarCanvas(rbt) {
     let cv  = document.querySelector('#cvRejilla');
     regiones  = rbt.value;
@@ -227,7 +243,7 @@ function empezar() {
     }
 
     let html = '<p>Tiempo: <output class="crono" id="crono-raf">00:00:00</output></p>';
-    html += '<button class="btnFunc" onclick="comprobar();">Comprobar</button>';
+    html += '<button class="btnFunc" onclick="comprobar(true);">Comprobar</button>';
     html += '<button class="btnFunc" onclick="finalizar(true);">Finalizar</button>';
     aside.innerHTML = html;
 
@@ -283,8 +299,9 @@ function empezar() {
 function comprobarCelda(fila, columna) {
     let usu = JSON.parse(sessionStorage['usuario']);
 
-    if (usu.SUDOKU[columna][fila] == '0')
-        return true;
+    if ((columna < usu.SUDOKU.length) && (fila < usu.SUDOKU.length))
+        if (usu.SUDOKU[columna][fila] == '0')
+            return true;
     return false;
 }
 
@@ -324,7 +341,7 @@ function selectNumero(btn, fila, columna) {
 
     // Si todo esta relleno, llamamos a comprobar
     if (comprobarCasillasRellenas()) {
-        comprobar();
+        comprobar(false);
     }
 }
 
@@ -368,7 +385,7 @@ function comprobarCasillasRellenas() {
     return completo;
 }
 
-function comprobar() {
+function comprobar(boton) {
 
     let usu = JSON.parse(sessionStorage['usuario']),
         url = 'api/sudoku/'+usu.ID+'/comprobar',
@@ -383,16 +400,25 @@ function comprobar() {
             if(respuesta.ok) {
                 respuesta.json().then(function(datos) {
 
-                    console.log(datos.FALLOS.length);
-                    console.log(datos.FALLOS);
                     if (datos.FALLOS.length > 0) {
                         listaFallos = datos.FALLOS.slice();
 
-                        mensajeModal('HAY '+datos.FALLOS.length+' ERRORES',
-                        '¿Quieres intentr corregir los errores?',
-                        '<button onclick="cerrarMensajeModal(2);">Sí</button><button onclick="cerrarMensajeModal(1);">No</button>'
-                        );
-                    } else {
+                        if (!boton) {
+                            mensajeModal('HAY '+datos.FALLOS.length+' ERRORES',
+                                '¿Quieres intentar corregir los errores?',
+                                '<button onclick="cerrarMensajeModal(2);">Sí</button><button onclick="cerrarMensajeModal(1);">No</button>'
+                                );
+                        }
+                        else {
+                            //Pintar errores, celdas grises, numerosy los bordes
+                            //limpiarCanvas();
+                            pintarErrores();
+                            //pintarCeldaSeleccionada(document.querySelector('#cvRejilla'));
+                            pintarCeldasGrises();
+                            pintarBorde();
+                        }
+                        
+                    } else if (!boton) {
                         mensajeModal('¡¡¡ENHORABUENA!!!',
                         'Has resuelto el sudoku correctamente en un tiempo de '+document.querySelector('#crono-raf').value,
                         '<button onclick="cerrarMensajeModal(0);">Aceptar</button>'
@@ -457,7 +483,6 @@ function actualizarRAF( timestamp ) {
 }
 
 function pararRAF() {
-    console.log('Parado');
     document.querySelector('#crono-raf').setAttribute('data-parar', 'si');
 }
 
