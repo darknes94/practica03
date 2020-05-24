@@ -463,23 +463,25 @@ function finalizar(pararTimer) {
 // =================================================================================
 
 function actualizarRAF( timestamp ) {
-    if (document.querySelector('#crono-raf').getAttribute('data-parar'))
-        return false;
+    if (document.querySelector('#crono-raf') != null) {
+        if (document.querySelector('#crono-raf').getAttribute('data-parar'))
+            return false;
 
-    if (!document.querySelector('#crono-raf').getAttribute('data-valor'))
-        document.querySelector('#crono-raf').setAttribute('data-valor', timestamp);
+        if (!document.querySelector('#crono-raf').getAttribute('data-valor'))
+            document.querySelector('#crono-raf').setAttribute('data-valor', timestamp);
 
-    let valor    = Math.floor((timestamp - parseInt(document.querySelector('#crono-raf').getAttribute('data-valor'))) / 1000),
-        horas    = Math.floor(valor / 3600),
-        minutos  = Math.floor((valor - horas * 3600) / 60),
-        segundos = valor - horas * 36000 - minutos * 60;
-    
-    horas    = (horas < 10?'0':'') + horas;
-    minutos  = (minutos < 10?'0':'') + minutos;
-    segundos = (segundos < 10?'0':'') + segundos;
+        let valor    = Math.floor((timestamp - parseInt(document.querySelector('#crono-raf').getAttribute('data-valor'))) / 1000),
+            horas    = Math.floor(valor / 3600),
+            minutos  = Math.floor((valor - horas * 3600) / 60),
+            segundos = valor - horas * 36000 - minutos * 60;
+        
+        horas    = (horas < 10?'0':'') + horas;
+        minutos  = (minutos < 10?'0':'') + minutos;
+        segundos = (segundos < 10?'0':'') + segundos;
 
-    document.querySelector('#crono-raf').innerHTML = `${horas}:${minutos}:${segundos}`;
-    requestAnimationFrame( actualizarRAF );
+        document.querySelector('#crono-raf').innerHTML = `${horas}:${minutos}:${segundos}`;
+        requestAnimationFrame( actualizarRAF );
+    }
 }
 
 function pararRAF() {
