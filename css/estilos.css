@@ -49,7 +49,7 @@ header div img {
     height: 45px;
 }
 
-footer {
+#principal + footer, #acerca_principal + footer {
 	display: flex;
     align-items: center;
 	color:#fff;
@@ -61,16 +61,16 @@ footer {
     height: 70px;
 }
 
-footer p {
+#principal + footer p, #acerca_principal + footer p {
     margin-left: 20px;
     font-size: 1.3em;
 }
 
-footer a {
+#principal + footer a, #acerca_principal + footer a {
 	color:#fff;
 }
 
-footer a:hover {
+#principal + footer a:hover, #acerca_principal + footer a:hover {
 	color: #ffa600;
 	font-weight: bold;
 }
@@ -308,6 +308,10 @@ footer a:hover {
         
         #capa-fondo > article > footer {
             border-radius: 0 0 8px 8px;
+            height: 60px;
+            color: #fff;
+            background-color: #0d455a;
+            border-top: 5px solid #026f98;
         }
 
         #capa-fondo > article > footer > button {

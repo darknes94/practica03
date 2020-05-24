@@ -1,23 +1,14 @@
 // =================================================================================
-// Funciones generales que se utilizan para generar los modals
+// Funciones para manejar los modals
 // =================================================================================
 
-function mensajeModal(h2,p,f_boton,boton) {
+function mensajeModal(p1,p2,codigoBtn) {
     let html = '';
     html += '<article>';
-    html +=   '<h2>'+h2+'</h2>';
-    html +=   '<p>'+p+'</p>';
-    html +=   '<footer class="modal"><button onclick="'+f_boton+'">'+boton+'</button></footer>';
-    html += '</article>';
-    crearModal(html);
-}
-
-function modalConfirmacion(h2,codigo,btnAceptar,btnCancelar) {
-    let html = '';
-    html += '<article>';
-    html +=   '<h2>'+h2+'</h2>';
-    html +=   codigo;
-    html +=   '<footer class="modal">'+btnAceptar+'<button onclick="'+btnCancelar+'">Cancelar</button></footer>';
+    html +=   '<h2>SUDOKU</h2>';
+    html +=   '<p>'+p1+'</p>';
+    html +=   '<p>'+p2+'</p>';
+    html +=   '<footer class="modal">'+codigoBtn+'</footer>';
     html += '</article>';
     crearModal(html);
 }
@@ -32,39 +23,17 @@ function crearModal(html) {
     document.body.setAttribute('style','overflow-x:hidden; overflow-y:hidden;');
 }
 
-function borraCodigoModal() {
+function cerrarMensajeModal(tipo) {
+    // Borra el html del modal
     document.querySelector('#capa-fondo').remove();
     document.body.removeAttribute('style');
-}
 
-function cerrarMensajeModal(tipo, redirigir) {
-    borraCodigoModal();
-
-    if (tipo == '0') { // Login, nuevo articulo
-        
-        if (redirigir) // redirigimos en caso de login correcto y nuevo articulo creado
-            window.location.replace("index.html");
-        else // (solo para login) devuelve el foco al input 'login'
-            document.querySelector("#login_name_lg").focus();
-
-    } else if (tipo == '1') { // Preguntas
-        if (redirigir)
-            document.querySelector("#art-pre").value = '';
-        else
-            document.querySelector("#art-pre").focus();
-    }
-    else if (tipo == '2') { // Registro
-        if (redirigir)
-        {
-            window.location.replace("login.html");
-        }
-        else // (solo para login) devuelve el foco al input 'login'
-        {
-            document.querySelector("#login_name").focus();
-        }
+    if (tipo == '0') { // Aceptar de enhorabuena
+        finalizar(false);
+    } else if (tipo == '1') { // No de la confirmacion
+        finalizar(true);
     }
 }
-
 
 
 // =================================================================================
@@ -73,8 +42,9 @@ function cerrarMensajeModal(tipo, redirigir) {
 var anchCelda = 50;
 var regiones = 4;
 var subcuadros = 2;
-var juego;
-var clic = false;
+var juego = listaFallos = null;
+var clic = errores = false;
+var casLlenas = casLlenJuego = 0;
 
 function prepararCanvas() {
     let cv     = document.querySelector('#cvRejilla'),
@@ -194,6 +164,44 @@ function lineasGordas9x9(cv, ctx) {
     ctx.lineTo(cv.width,anchCelda*6);
 }
 
+function pintarCeldaHover(cv, fila, columna) {
+    let ctx = cv.getContext('2d');
+    ctx.beginPath();
+    ctx.fillStyle = '#06B';
+    ctx.fillRect(fila*anchCelda, columna*anchCelda, anchCelda, anchCelda);
+}
+
+function pintarCeldasGrises() {
+    let cv  = document.querySelector('#cvRejilla'),
+        ctx = cv.getContext('2d'),
+        usu = JSON.parse(sessionStorage['usuario']),
+        rAnc  = cAnc = 0,
+        mitad = anchCelda/2;
+
+    // Celdas grises con numeros
+    for (let row=0; row<usu.SUDOKU.length; row++) {
+        for (let col=0; col<usu.SUDOKU.length; col++) {
+            rAnc = row*anchCelda;
+            cAnc = col*anchCelda;
+
+            if (usu.SUDOKU[col][row] != '0') {
+                ctx.beginPath();
+                ctx.fillStyle = '#DBDBDB';
+                ctx.fillRect(rAnc, cAnc, anchCelda, anchCelda);
+            }
+
+            if (juego[col][row] != '0') {
+                ctx.beginPath();
+                ctx.fillStyle = '#000';
+                ctx.font = 'bold 25px sans-serif,arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(juego[col][row],rAnc+mitad, cAnc+mitad);
+            }
+        }
+    }
+}
+
 function cambiarCanvas(rbt) {
     let cv  = document.querySelector('#cvRejilla');
     regiones  = rbt.value;
@@ -218,9 +226,9 @@ function empezar() {
         radios[i].disabled = true;
     }
 
-    let html = '<p>Tiempo: 00:00:00</p>';
+    let html = '<p>Tiempo: <output class="crono" id="crono-raf">00:00:00</output></p>';
     html += '<button class="btnFunc" onclick="comprobar();">Comprobar</button>';
-    html += '<button class="btnFunc" onclick="finalizar();">Finalizar</button>';
+    html += '<button class="btnFunc" onclick="finalizar(true);">Finalizar</button>';
     aside.innerHTML = html;
 
     generarSudoku();
@@ -267,6 +275,9 @@ function empezar() {
             anyadirNumDisponibles(fila, columna);
         }
     };
+
+    // Activamos el timer
+    iniciarRAF();
 }
 
 function comprobarCelda(fila, columna) {
@@ -275,13 +286,6 @@ function comprobarCelda(fila, columna) {
     if (usu.SUDOKU[columna][fila] == '0')
         return true;
     return false;
-}
-
-function pintarCeldaHover(cv, fila, columna) {
-    let ctx = cv.getContext('2d');
-    ctx.beginPath();
-    ctx.fillStyle = '#06B';
-    ctx.fillRect(fila*anchCelda, columna*anchCelda, anchCelda, anchCelda);
 }
 
 function anyadirNumDisponibles(fila, columna) {
@@ -317,8 +321,12 @@ function selectNumero(btn, fila, columna) {
     pintarBorde();
 
     clic = false;
-}
 
+    // Si todo esta relleno, llamamos a comprobar
+    if (comprobarCasillasRellenas()) {
+        comprobar();
+    }
+}
 
 function generarSudoku() {
     let url = 'api/sudoku/generar/'+regiones;
@@ -326,9 +334,15 @@ function generarSudoku() {
         fetch(url, {method:'POST'}).then(function(respuesta){
             if(respuesta.ok) {
                 respuesta.json().then(function(datos) {
-                    console.log(datos);
                     sessionStorage['usuario'] = JSON.stringify(datos);
                     juego = JSON.parse(sessionStorage['usuario']).SUDOKU.slice();
+
+                    for (let row=0; row<juego.length; row++) {
+                        for (let col=0; col<juego.length; col++) {
+                            if (juego[col][row] != '0')
+                                casLlenas++;
+                        }
+                    }
                     pintarCeldasGrises();
                     pintarBorde();
                 });
@@ -337,35 +351,21 @@ function generarSudoku() {
         });
 }
 
-function pintarCeldasGrises() {
-    let cv  = document.querySelector('#cvRejilla'),
-        ctx = cv.getContext('2d'),
-        usu = JSON.parse(sessionStorage['usuario']),
-        rAnc  = cAnc = 0,
-        mitad = anchCelda/2;
+function comprobarCasillasRellenas() {
+    let completo = false;
 
-    // Celdas grises con numeros
-    for (let row=0; row<usu.SUDOKU.length; row++) {
-        for (let col=0; col<usu.SUDOKU.length; col++) {
-            rAnc = row*anchCelda;
-            cAnc = col*anchCelda;
-
-            if (usu.SUDOKU[col][row] != '0') {
-                ctx.beginPath();
-                ctx.fillStyle = '#DBDBDB';
-                ctx.fillRect(rAnc, cAnc, anchCelda, anchCelda);
-            }
-
-            if (juego[col][row] != '0') {
-                ctx.beginPath();
-                ctx.fillStyle = '#000';
-                ctx.font = 'bold 25px sans-serif,arial';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(juego[col][row],rAnc+mitad, cAnc+mitad);
-            }
+    for (let row=0; row<juego.length; row++) {
+        for (let col=0; col<juego.length; col++) {
+            if (juego[col][row] != '0')
+                casLlenJuego++;
         }
     }
+
+    if (casLlenJuego == (regiones*regiones)){
+        completo = true;
+    }
+    casLlenJuego = 0;
+    return completo;
 }
 
 function comprobar() {
@@ -374,36 +374,40 @@ function comprobar() {
         url = 'api/sudoku/'+usu.ID+'/comprobar',
         fd  = new FormData();
 
-    /*let cosa = '[';
-
-    for (let i=0; i<juego.length; i++)
-        cosa += '['+juego[i]+'],';
-    cosa = cosa.substring(0,cosa.length-1);
-    cosa += ']';
-        console.log(cosa);*/
-
-
-    fd.append('juego', juego);
-    console.log(juego);
+    fd.append('juego', JSON.stringify(juego));
 
     fetch(url, {method:'POST',
         body:fd,
-        headers:{'Authorization':usu.TOKEN}}).then(function(respuesta){
+        headers:{'Authorization':usu.TOKEN}}).then(function(respuesta) {
 
             if(respuesta.ok) {
-                respuesta.json().then(function(datos){
-                    console.log(datos);
-                    /*mensajeModal('NUEVO ARTICULO',
-                        'Se ha guardado correctamente el artículo',
-                        'cerrarMensajeModal(0,true);',
-                        'Aceptar');*/
+                respuesta.json().then(function(datos) {
+
+                    console.log(datos.FALLOS.length);
+                    console.log(datos.FALLOS);
+                    if (datos.FALLOS.length > 0) {
+                        listaFallos = datos.FALLOS.slice();
+
+                        mensajeModal('HAY '+datos.FALLOS.length+' ERRORES',
+                        '¿Quieres intentr corregir los errores?',
+                        '<button onclick="cerrarMensajeModal(2);">Sí</button><button onclick="cerrarMensajeModal(1);">No</button>'
+                        );
+                    } else {
+                        mensajeModal('¡¡¡ENHORABUENA!!!',
+                        'Has resuelto el sudoku correctamente en un tiempo de '+document.querySelector('#crono-raf').value,
+                        '<button onclick="cerrarMensajeModal(0);">Aceptar</button>'
+                        );
+                    }
                 });
             } else
                 console.log('Error en la petición fetch de comprobar SUDOKU.');
         });
 }
 
-function finalizar() {
+function finalizar(pararTimer) {
+    if (pararTimer)
+        pararRAF();
+
     let usu = JSON.parse(sessionStorage['usuario']),
         url = 'api/sudoku/'+usu.ID;
 
@@ -416,11 +420,50 @@ function finalizar() {
                     delete(sessionStorage['usuario']);
                     regiones = 4;
                     subcuadros = 2;
-                    juego = 4;
-                    clic = false;
+                    clic = errores = false;
+                    juego = listaFallos = null;
+                    casLlenas = casLlenJuego = 0;
+                    
                     prepararCanvas();
                 });
             } else
                 console.log('Error en la petición fetch de borrar SUDOKU.');
         });
+}
+
+
+// =================================================================================
+// Funciones para manejar el timer
+// =================================================================================
+
+function actualizarRAF( timestamp ) {
+    if (document.querySelector('#crono-raf').getAttribute('data-parar'))
+        return false;
+
+    if (!document.querySelector('#crono-raf').getAttribute('data-valor'))
+        document.querySelector('#crono-raf').setAttribute('data-valor', timestamp);
+
+    let valor    = Math.floor((timestamp - parseInt(document.querySelector('#crono-raf').getAttribute('data-valor'))) / 1000),
+        horas    = Math.floor(valor / 3600),
+        minutos  = Math.floor((valor - horas * 3600) / 60),
+        segundos = valor - horas * 36000 - minutos * 60;
+    
+    horas    = (horas < 10?'0':'') + horas;
+    minutos  = (minutos < 10?'0':'') + minutos;
+    segundos = (segundos < 10?'0':'') + segundos;
+
+    document.querySelector('#crono-raf').innerHTML = `${horas}:${minutos}:${segundos}`;
+    requestAnimationFrame( actualizarRAF );
+}
+
+function pararRAF() {
+    console.log('Parado');
+    document.querySelector('#crono-raf').setAttribute('data-parar', 'si');
+}
+
+function iniciarRAF() {
+    document.querySelector('#crono-raf').innerHTML = '00:00:00';
+    document.querySelector('#crono-raf').removeAttribute('data-parar');
+    document.querySelector('#crono-raf').removeAttribute('data-valor');
+    requestAnimationFrame( actualizarRAF );
 }
